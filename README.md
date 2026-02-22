@@ -172,7 +172,7 @@ Data key in `localStorage`: `insurance_platform_data`.
 
 The app deploys as **three Netlify sites** (container + Policy Details + Pay Premium). See [Deployment.md](Deployment.md) for the full guide. Summary:
 
-- **Container:** Build `npm run build -w container`, publish `container/dist`. Set env vars `MFE_POLICY_URL` and `MFE_PREMIUM_URL` to the two remote deploy URLs (with trailing `/`). Root [netlify.toml](netlify.toml) configures this site.
+- **Container:** Set Netlify **Base directory** to `container` so it uses [container/netlify.toml](container/netlify.toml) (build, publish, redirects). Set env vars `MFE_POLICY_URL` and `MFE_PREMIUM_URL` to the two remote deploy URLs (with trailing `/`).
 - **Policy Details:** Build `npm run build -w mfe-policy-details`, publish `mfe-policy-details/dist`. Set `MFE_POLICY_PUBLIC_PATH` (or Netlify’s `DEPLOY_PRIME_URL` is used). CORS `_headers` are copied into dist.
 - **Pay Premium:** Build `npm run build -w mfe-pay-premium`, publish `mfe-pay-premium/dist`. Set `MFE_PREMIUM_PUBLIC_PATH` (or `DEPLOY_PRIME_URL`). CORS `_headers` are copied into dist.
 

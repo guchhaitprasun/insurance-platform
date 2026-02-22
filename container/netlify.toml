@@ -1,0 +1,11 @@
+# Container site only. Use Netlify "Base directory" = container for this site.
+# Policy and Pay Premium sites use repo root and set build/publish in the UI.
+
+[build]
+  command = "cd .. && npm run build -w container"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

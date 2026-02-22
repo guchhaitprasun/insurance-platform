@@ -16,6 +16,8 @@ This document describes how to deploy the Insurance Platform to **Netlify** usin
 
 **Build order:** Deploy the two remotes (Policy Details and Pay Premium) first, then the container, so the container’s environment variables point at the live remote URLs.
 
+**shared-storage** is not deployed. It is a workspace library and is bundled into the container and both MFEs when they are built; no separate Netlify site or build is required.
+
 ---
 
 ## 1. Code changes required
@@ -55,9 +57,8 @@ Create **three Netlify sites** (same repo; each site has its own build command a
 
 ### 2.1 Container site
 
-- **Build command:** `npm run build -w container`
-- **Publish directory:** `container/dist`
-- **Base directory:** (repo root)
+- **Base directory:** `container` (so Netlify uses [container/netlify.toml](container/netlify.toml) and does not affect the other two sites)
+- **Build command / Publish / Redirects:** defined in `container/netlify.toml` (build runs from repo root via `cd .. && npm run build -w container`, publish = `dist` = container/dist)
 - **Environment variables (required):**
   - `MFE_POLICY_URL` = `https://<your-policy-site>.netlify.app/`
   - `MFE_PREMIUM_URL` = `https://<your-premium-site>.netlify.app/`
@@ -86,22 +87,10 @@ Create **three Netlify sites** (same repo; each site has its own build command a
 
 ---
 
-## 3. netlify.toml (optional)
+## 3. netlify.toml
 
-You can use a single `netlify.toml` at the repo root for the **container** site (build command, publish, redirects). For the Policy Details and Pay Premium sites, configure build command, publish directory, and env vars in the Netlify dashboard, since each of the three sites needs different values. Document the three setups in the README.
-
-Example for the container only:
-
-```toml
-[build]
-  command = "npm run build -w container"
-  publish = "container/dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
+- **Container:** [container/netlify.toml](container/netlify.toml) holds the container’s build command, publish directory, and SPA redirects. For this to apply, the **container** Netlify site must have **Base directory** set to `container`. Then Netlify only uses that file for the container site.
+- **Policy Details and Pay Premium:** There is no `netlify.toml` at the repo root, so these two sites use only the Netlify UI. Set build command, publish directory, and env vars in the dashboard (see sections 2.2 and 2.3).
 
 ---
 
