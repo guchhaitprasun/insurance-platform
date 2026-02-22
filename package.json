@@ -1,0 +1,29 @@
+{
+  "name": "insurance-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Insurance platform POC - MFE container + Policy Details & Pay Premium",
+  "workspaces": [
+    "container",
+    "mfe-policy-details",
+    "mfe-pay-premium",
+    "shared-storage"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev": "concurrently -n policy,premium,host -c blue,green,magenta \"npm run start -w mfe-policy-details\" \"npm run start -w mfe-pay-premium\" \"npm run start -w container\"",
+    "build": "npm run build --workspaces --if-present",
+    "build:container": "npm run build -w container",
+    "build:policy": "npm run build -w mfe-policy-details",
+    "build:premium": "npm run build -w mfe-pay-premium",
+    "start": "npm run start -w container",
+    "start:container": "npm run start -w container",
+    "start:policy": "npm run start -w mfe-policy-details",
+    "start:premium": "npm run start -w mfe-pay-premium"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

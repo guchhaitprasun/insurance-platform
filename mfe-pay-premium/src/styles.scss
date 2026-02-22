@@ -1,0 +1,162 @@
+// CSS pre-processor: Sass (Pay Premium MFE)
+$bg: #0f1419;
+$surface: #1a2332;
+$surface-hover: #243044;
+$border: #2d3a4d;
+$text: #e6edf3;
+$text-muted: #8b9cb3;
+$accent: #3b82f6;
+$accent-hover: #2563eb;
+$radius: 12px;
+$error: #ef4444;
+
+.pay-premium-mfe {
+  width: 100%;
+  max-width: 480px;
+}
+
+.mfe-section {
+  margin-bottom: 1.5rem;
+
+  .btn {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.mfe-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.mfe-subtitle {
+  margin: 0 0 1rem 0;
+  color: var(--text-muted, $text-muted);
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  color: var(--text-muted, $text-muted);
+  padding: 2rem 0;
+}
+
+.payment-form {
+  background: var(--surface, $surface);
+  border: 1px solid var(--border, $border);
+  border-radius: var(--radius, $radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.payment-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border, $border);
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    color: var(--text-muted, $text-muted);
+
+    &.total {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text, $text);
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text, $text);
+  }
+}
+
+.form-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba($error, 0.15);
+  color: $error;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border, $border);
+  border-radius: var(--radius, $radius);
+  background: var(--bg, $bg);
+  color: var(--text, $text);
+  font-size: 0.95rem;
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text, $text);
+
+  input {
+    accent-color: var(--accent, $accent);
+  }
+}
+
+.btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius, $radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: var(--accent, $accent);
+    color: white;
+    &:hover:not(:disabled) {
+      background: var(--accent-hover, $accent-hover);
+    }
+  }
+
+  &.secondary {
+    background: var(--surface-hover, $surface-hover);
+    color: var(--text, $text);
+    margin-left: 0.5rem;
+    &:hover {
+      background: var(--border, $border);
+    }
+  }
+}
+
+.submit-btn {
+  margin-top: 0.5rem;
+  width: 100%;
+}
