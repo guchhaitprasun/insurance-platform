@@ -22,13 +22,26 @@ const typeIcons = {
   Life: Favorite,
 };
 
+const statusConfig = {
+  active: { color: 'success', label: 'Active' },
+  expired: { color: 'error', label: 'Expired' },
+  lapsed: { color: 'error', label: 'Lapsed' },
+  pending_verification: { color: 'warning', label: 'Pending verification' },
+  under_review: { color: 'warning', label: 'Under review' },
+  documents_required: { color: 'warning', label: 'Documents required' },
+};
+
+const payAllowedStatuses = ['active'];
+
 export default function PolicyCard({ policy, recentlyPaid }) {
   const navigate = useNavigate();
   const Icon = typeIcons[policy.type] || HealthAndSafety;
+  const statusCfg = statusConfig[policy.status] || { color: 'default', label: policy.status };
+  const canPay = payAllowedStatuses.includes(policy.status);
 
   const handlePayClick = (e) => {
     e.preventDefault();
-    navigate('/pay-premium', { state: { policyId: policy.id } });
+    if (canPay) navigate('/pay-premium', { state: { policyId: policy.id } });
   };
 
   return (
@@ -63,9 +76,9 @@ export default function PolicyCard({ policy, recentlyPaid }) {
               </Box>
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <Chip
-                  label={policy.status}
+                  label={statusCfg.label}
                   size="small"
-                  color="success"
+                  color={statusCfg.color}
                   sx={{ textTransform: 'capitalize', fontWeight: 600 }}
                 />
                 {recentlyPaid && (
@@ -110,19 +123,33 @@ export default function PolicyCard({ policy, recentlyPaid }) {
             </Box>
           </Stack>
         </Box>
-        <Button
-          component={Link}
-          to="/pay-premium"
-          state={{ policyId: policy.id }}
-          variant="contained"
-          color="primary"
-          fullWidth
-          startIcon={<PaymentOutlined />}
-          onClick={handlePayClick}
-          sx={{ mt: 2, flexShrink: 0 }}
-        >
-          Pay premium
-        </Button>
+        {canPay ? (
+          <Button
+            component={Link}
+            to="/pay-premium"
+            state={{ policyId: policy.id }}
+            variant="contained"
+            color="primary"
+            fullWidth
+            startIcon={<PaymentOutlined />}
+            onClick={handlePayClick}
+            sx={{ mt: 2, flexShrink: 0 }}
+          >
+            Pay premium
+          </Button>
+        ) : (
+          <Button
+            variant="outlined"
+            color="inherit"
+            fullWidth
+            disabled
+            sx={{ mt: 2, flexShrink: 0 }}
+          >
+            {policy.status === 'expired' || policy.status === 'lapsed'
+              ? 'Policy not active'
+              : 'Complete verification to pay'}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

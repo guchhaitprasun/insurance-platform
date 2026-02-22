@@ -24,9 +24,12 @@ export default function PayPremiumApp() {
     console.warn('PayPremium: shared-storage not ready', e);
   }
   if (!Array.isArray(policies)) policies = [];
+  const payablePolicies = policies.filter((p) => p.status === 'active');
   const selectedPolicy = policyId ? (getPolicyById && getPolicyById(policyId)) : null;
-  const [policySelect, setPolicySelect] = useState(policyId || (policies[0]?.id ?? ''));
+  const defaultId = (selectedPolicy?.status === 'active' ? policyId : null) || (payablePolicies[0]?.id ?? policies[0]?.id ?? '');
+  const [policySelect, setPolicySelect] = useState(defaultId);
   const policy = getPolicyById(policySelect) || selectedPolicy;
+  const canPaySelected = policy?.status === 'active';
   const [paid, setPaid] = useState(false);
   const [paymentId, setPaymentId] = useState(null);
 
@@ -112,15 +115,21 @@ export default function PayPremiumApp() {
                 onChange={(e) => setPolicySelect(e.target.value)}
               >
                 {policies.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>
+                  <MenuItem key={p.id} value={p.id} disabled={p.status !== 'active'}>
                     {p.id} – {p.type} (₹{p.premium?.toLocaleString()})
+                    {p.status !== 'active' ? ` – ${p.status.replace(/_/g, ' ')}` : ''}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           )}
-          {policy && (
+          {policy && canPaySelected && (
             <PaymentForm policy={policy} onSuccess={handlePaymentSuccess} />
+          )}
+          {policy && !canPaySelected && (
+            <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+              This policy ({policy.status.replace(/_/g, ' ')}) cannot accept payments. Select an active policy to pay.
+            </Typography>
           )}
         </>
       )}
