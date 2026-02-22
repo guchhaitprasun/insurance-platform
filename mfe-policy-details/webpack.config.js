@@ -1,13 +1,19 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
+
+const policyPublicPath =
+  process.env.MFE_POLICY_PUBLIC_PATH ||
+  (process.env.DEPLOY_PRIME_URL && `${process.env.DEPLOY_PRIME_URL}/`) ||
+  (process.env.NODE_ENV === 'production' ? 'https://insurance-policy.netlify.app/' : 'http://localhost:3001/');
 
 module.exports = {
   entry: './src/index.jsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js',
-    publicPath: 'http://localhost:3001/',
+    publicPath: policyPublicPath,
     clean: true,
   },
   resolve: {
@@ -37,6 +43,9 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './public/index.html' }),
+    new CopyPlugin({
+      patterns: [{ from: 'public/_headers', to: '.' }],
+    }),
     new ModuleFederationPlugin({
       name: 'policyDetails',
       filename: 'remoteEntry.js',
