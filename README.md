@@ -28,19 +28,24 @@ A **Micro Frontend (MFE)** proof-of-concept client for an insurance company. The
 │               │   │               │   │                  │
 │ • Policy list │   │ • Policy pick │   │ • getUser        │
 │ • Policy cards│   │ • Payment form│   │ • getPolicies    │
-│ • Recently    │   │ • Web Worker  │   │ • getPolicyById  │
-│   paid badge  │   │   (validation)│   │ • getPayments    │
-│               │   │               │   │ • addPayment     │
-└───────┬───────┘   └───────┬───────┘   │ • eventBus       │
-        │                   │           └────────┬─────────┘
-        │    eventBus       │                    │
-        └───────────────────┴────────────────────┘
+│ • Recently    │   │       │       │   │ • getPolicyById  │
+│   paid badge  │   │       ▼       │   │ • getPayments    │
+│               │   │ ┌───────────┐ │   │ • addPayment     │
+└───────┬───────┘   │ │  WORKER   │ │   │ • eventBus       │
+        │           │ │ validation│ │   └────────┬─────────┘
+        │           │ └───────────┘ │           │
+        │           └───────┬───────┘           │
+        │    eventBus       │                   │
+        └───────────────────┴───────────────────┘
                 (payment-complete → Policy Details)
 ```
 
+**Web Worker (Pay Premium MFE)**  
+Payment validation runs off the main thread when the MFE is same-origin with the page. The worker (`payment.worker.js`) receives policyId, amount, method; validates; returns either errors or a validated payload with `validatedAt`. Main thread submits the result and updates UI. When cross-origin (e.g. MFE on 3002, page on 5000), the worker is not used and validation runs on the main thread to avoid `SecurityError`.
+
 - **Container**: Host app; provides theme, layout, and routing. Entry uses bootstrap pattern (`index.jsx` → `import('./bootstrap')`) to avoid shared-module eager consumption.
 - **Policy Details MFE**: Remote app; shows policies and subscribes to `payment-complete` to show “Recently paid.”
-- **Pay Premium MFE**: Remote app; payment form; uses Web Worker for validation when same-origin, else validates on main thread.
+- **Pay Premium MFE**: Remote app; payment form; **Web Worker** runs payment validation off the main thread when same-origin (see Worker callout above); otherwise validates on main thread.
 - **shared-storage**: Shared workspace package; in-memory read/write backed by `localStorage`; exports `eventBus` (subscribe/publish) for cross-MFE events.
 
 ## Tech Stack
