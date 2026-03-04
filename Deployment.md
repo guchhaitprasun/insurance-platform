@@ -1,104 +1,343 @@
-# Deployment (Netlify)
+# Deployment Guide (Netlify)
 
-This document describes how to deploy the Insurance Platform to **Netlify** using **three separate sites**: one for the container (host) and one for each remote MFE (Policy Details, Pay Premium). The container loads the remotes from their deploy URLs; remotes use their deploy URL as `publicPath`.
+This document describes how to deploy the **Insurance Platform** using **Netlify**.
+The system is deployed as **three independent sites**:
 
-**Note:** Pay Premium runs cross-origin when loaded by the container, so payment validation uses the existing main-thread fallback (the Web Worker is only used when opening Pay Premium standalone).
+1. **Container (Host Application)**
+2. **Policy Details Micro Frontend**
+3. **Pay Premium Micro Frontend**
 
----
+The container dynamically loads the remote MFEs using **Webpack Module Federation**.
 
-## Overview
-
-| Site            | Build command                          | Publish directory          | Key env vars                         |
-|-----------------|----------------------------------------|----------------------------|--------------------------------------|
-| Container       | `npm run build -w container`            | `container/dist`           | `MFE_POLICY_URL`, `MFE_PREMIUM_URL`  |
-| Policy Details  | `npm run build -w mfe-policy-details`   | `mfe-policy-details/dist`  | `MFE_POLICY_PUBLIC_PATH`             |
-| Pay Premium     | `npm run build -w mfe-pay-premium`      | `mfe-pay-premium/dist`     | `MFE_PREMIUM_PUBLIC_PATH`            |
-
-**Build order:** Deploy the two remotes (Policy Details and Pay Premium) first, then the container, so the container’s environment variables point at the live remote URLs.
-
-**shared-storage** is not deployed. It is a workspace library and is bundled into the container and both MFEs when they are built; no separate Netlify site or build is required.
+Remotes are deployed independently and expose their `remoteEntry.js` files, which the container loads using environment variables.
 
 ---
 
-## 1. Code changes required
+## Live Deployment
 
-### 1.1 Container — env-based remotes
-
-**File:** `container/webpack.config.js`
-
-- Read `process.env.MFE_POLICY_URL` and `process.env.MFE_PREMIUM_URL`.
-- If both are set (e.g. on Netlify), set Module Federation `remotes` to:
-  - `policyDetails@${MFE_POLICY_URL}remoteEntry.js`
-  - `payPremium@${MFE_PREMIUM_URL}remoteEntry.js`
-- URLs must **end with `/`** (e.g. `https://insurance-policy.netlify.app/`).
-- When either env var is unset, keep the current localhost URLs for local development.
-
-### 1.2 Policy Details MFE — env-based publicPath
-
-**File:** `mfe-policy-details/webpack.config.js`
-
-- Set `output.publicPath` to:
-  - `process.env.MFE_POLICY_PUBLIC_PATH` if set, or
-  - In production, the deployed origin (e.g. `https://insurance-policy.netlify.app/`), or
-  - `http://localhost:3001/` for development.
-- On Netlify you can set `MFE_POLICY_PUBLIC_PATH` to the site’s deploy URL, or use Netlify’s `DEPLOY_PRIME_URL` in the build.
-
-### 1.3 Pay Premium MFE — env-based publicPath
-
-**File:** `mfe-pay-premium/webpack.config.js`
-
-- Same as Policy Details: set `output.publicPath` from `process.env.MFE_PREMIUM_PUBLIC_PATH` or the production deploy URL; otherwise `http://localhost:3002/` for development.
+| Service                                   | Status                                                                                                                                                                          | Live URL                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Insurance Platform – Container (Host)** | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys)      | https://insurance-platform.prasunguchhait.com |
+| **Policy Details – Micro Frontend**       | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys) | https://mfe-policy-detail.prasunguchhait.com  |
+| **Pay Premium – Micro Frontend**          | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys) | https://mfe-pay-premium.prasunguchhait.com    |
 
 ---
 
-## 2. Netlify configuration
+# Deployment Architecture
 
-Create **three Netlify sites** (same repo; each site has its own build command and publish directory).
-
-### 2.1 Container site
-
-- **Base directory:** `container` (so Netlify uses [container/netlify.toml](container/netlify.toml) and does not affect the other two sites)
-- **Build command / Publish / Redirects:** defined in `container/netlify.toml` (build runs from repo root via `cd .. && npm run build -w container`, publish = `dist` = container/dist)
-- **Environment variables (required):**
-  - `MFE_POLICY_URL` = `https://<your-policy-site>.netlify.app/`
-  - `MFE_PREMIUM_URL` = `https://<your-premium-site>.netlify.app/`
-- **Redirects (SPA):** `/* /index.html 200`  
-  Configure in Netlify UI (Redirects) or via `netlify.toml`, or add `container/public/_redirects` with that line and ensure it is copied into `container/dist` during the build.
-
-### 2.2 Policy Details site
-
-- **Build command:** `npm run build -w mfe-policy-details`
-- **Publish directory:** `mfe-policy-details/dist`
-- **Base directory:** (repo root)
-- **Environment variable:** `MFE_POLICY_PUBLIC_PATH` = the site’s deploy URL (e.g. `https://insurance-policy.netlify.app/`), or use `DEPLOY_PRIME_URL` in the build to set it automatically.
-- **CORS:** Add a `_headers` file so the container can load the remote. For example, in `mfe-policy-details/public/_headers` (and ensure it is copied to the publish directory):
-  ```
-  /*
-    Access-Control-Allow-Origin: *
-  ```
-
-### 2.3 Pay Premium site
-
-- **Build command:** `npm run build -w mfe-pay-premium`
-- **Publish directory:** `mfe-pay-premium/dist`
-- **Base directory:** (repo root)
-- **Environment variable:** `MFE_PREMIUM_PUBLIC_PATH` = the site’s deploy URL (e.g. `https://insurance-premium.netlify.app/`), or use `DEPLOY_PRIME_URL`.
-- **CORS:** Same as Policy Details — add `_headers` with `Access-Control-Allow-Origin: *` (or restrict to your container origin if you prefer).
+```
+                    Netlify
+                       │
+                       │
+               ┌───────────────┐
+               │  Container    │
+               │ (Host App)    │
+               │               │
+               │ Loads Remotes │
+               └───────┬───────┘
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+     ┌──────────────┐   ┌──────────────┐
+     │ Policy MFE   │   │ Premium MFE  │
+     │ Netlify Site │   │ Netlify Site │
+     └──────────────┘   └──────────────┘
+```
 
 ---
 
-## 3. netlify.toml
+# Deployment Overview
 
-- **Container:** [container/netlify.toml](container/netlify.toml) holds the container’s build command, publish directory, and SPA redirects. For this to apply, the **container** Netlify site must have **Base directory** set to `container`. Then Netlify only uses that file for the container site.
-- **Policy Details and Pay Premium:** There is no `netlify.toml` at the repo root, so these two sites use only the Netlify UI. Set build command, publish directory, and env vars in the dashboard (see sections 2.2 and 2.3).
+| Site           | Build Command                         | Publish Directory         | Environment Variables               |
+| -------------- | ------------------------------------- | ------------------------- | ----------------------------------- |
+| Container      | `npm run build -w container`          | `container/dist`          | `MFE_POLICY_URL`, `MFE_PREMIUM_URL` |
+| Policy Details | `npm run build -w mfe-policy-details` | `mfe-policy-details/dist` | `MFE_POLICY_PUBLIC_PATH`            |
+| Pay Premium    | `npm run build -w mfe-pay-premium`    | `mfe-pay-premium/dist`    | `MFE_PREMIUM_PUBLIC_PATH`           |
 
 ---
 
-## 4. Deploy order
+# Shared Library
 
-1. Deploy **Policy Details** and **Pay Premium** first (so they have stable URLs).
-2. Note their deploy URLs (e.g. `https://insurance-policy.netlify.app/`, `https://insurance-premium.netlify.app/`).
-3. In the **Container** site, set `MFE_POLICY_URL` and `MFE_PREMIUM_URL` to those URLs (with trailing `/`).
-4. Deploy the **Container** site.
+The **shared-storage** workspace package is **not deployed separately**.
 
-After that, any change to a remote only requires redeploying that site; container redeploys are needed when you change the container app or when you want to point at new remote URLs.
+It is bundled during the build process into:
+
+* Container
+* Policy Details MFE
+* Pay Premium MFE
+
+No separate Netlify site is required.
+
+---
+
+# Step 1 — Container Configuration
+
+## File
+
+```
+container/webpack.config.js
+```
+
+The container loads remotes dynamically using environment variables.
+
+### Required Environment Variables
+
+```
+MFE_POLICY_URL
+MFE_PREMIUM_URL
+```
+
+Example:
+
+```
+MFE_POLICY_URL=https://insurance-policy.netlify.app/
+MFE_PREMIUM_URL=https://insurance-premium.netlify.app/
+```
+
+Important:
+
+* URLs **must end with `/`**
+* The container resolves:
+
+```
+policyDetails@${MFE_POLICY_URL}remoteEntry.js
+payPremium@${MFE_PREMIUM_URL}remoteEntry.js
+```
+
+For local development, the container falls back to:
+
+```
+http://localhost:3001/
+http://localhost:3002/
+```
+
+---
+
+# Step 2 — Policy Details MFE Configuration
+
+## File
+
+```
+mfe-policy-details/webpack.config.js
+```
+
+Set the `publicPath` dynamically:
+
+```
+output: {
+  publicPath: process.env.MFE_POLICY_PUBLIC_PATH || "http://localhost:3001/"
+}
+```
+
+### Netlify Environment Variable
+
+```
+MFE_POLICY_PUBLIC_PATH=https://insurance-policy.netlify.app/
+```
+
+Alternatively, you can use Netlify’s built-in variable:
+
+```
+DEPLOY_PRIME_URL
+```
+
+---
+
+# Step 3 — Pay Premium MFE Configuration
+
+## File
+
+```
+mfe-pay-premium/webpack.config.js
+```
+
+```
+output: {
+  publicPath: process.env.MFE_PREMIUM_PUBLIC_PATH || "http://localhost:3002/"
+}
+```
+
+### Netlify Environment Variable
+
+```
+MFE_PREMIUM_PUBLIC_PATH=https://insurance-premium.netlify.app/
+```
+
+---
+
+# Step 4 — Configure Netlify Sites
+
+Create **three Netlify sites** using the same repository.
+
+---
+
+# Container Site
+
+### Base Directory
+
+```
+container
+```
+
+### Build
+
+Handled via:
+
+```
+container/netlify.toml
+```
+
+### Example
+
+```
+[build]
+command = "cd .. && npm run build -w container"
+publish = "dist"
+```
+
+### Environment Variables
+
+```
+MFE_POLICY_URL
+MFE_PREMIUM_URL
+```
+
+### SPA Redirect
+
+Add:
+
+```
+/* /index.html 200
+```
+
+This can be configured in:
+
+* Netlify UI (Redirects)
+* `netlify.toml`
+* `public/_redirects`
+
+---
+
+# Policy Details Site
+
+### Build Command
+
+```
+npm run build -w mfe-policy-details
+```
+
+### Publish Directory
+
+```
+mfe-policy-details/dist
+```
+
+### Environment Variable
+
+```
+MFE_POLICY_PUBLIC_PATH
+```
+
+### CORS Configuration
+
+Create file:
+
+```
+mfe-policy-details/public/_headers
+```
+
+```
+/*
+Access-Control-Allow-Origin: *
+```
+
+This allows the container to load the remote module.
+
+---
+
+# Pay Premium Site
+
+### Build Command
+
+```
+npm run build -w mfe-pay-premium
+```
+
+### Publish Directory
+
+```
+mfe-pay-premium/dist
+```
+
+### Environment Variable
+
+```
+MFE_PREMIUM_PUBLIC_PATH
+```
+
+### CORS Configuration
+
+Create file:
+
+```
+mfe-pay-premium/public/_headers
+```
+
+```
+/*
+Access-Control-Allow-Origin: *
+```
+
+---
+
+# Web Worker Behavior
+
+The **Pay Premium MFE** uses a Web Worker for payment validation when running **standalone**.
+
+When loaded through the container:
+
+```
+container domain ≠ premium MFE domain
+```
+
+the application runs **cross-origin**, which prevents the worker from loading due to browser security restrictions.
+
+In this scenario, the application automatically **falls back to main-thread validation**.
+
+---
+
+# Deployment Order
+
+Deploy the applications in the following order:
+
+1. **Policy Details MFE**
+2. **Pay Premium MFE**
+3. **Container**
+
+After deploying the two remotes, configure the container environment variables using their live URLs and deploy the container.
+
+---
+
+# Updating Deployments
+
+| Change                   | Required Deployment  |
+| ------------------------ | -------------------- |
+| Policy UI change         | Redeploy Policy MFE  |
+| Premium UI change        | Redeploy Premium MFE |
+| Container routing change | Redeploy Container   |
+| Remote URL change        | Redeploy Container   |
+
+---
+
+# Summary
+
+The Insurance Platform demonstrates a **fully distributed frontend deployment model**.
+
+Key benefits:
+
+* Independent deployments
+* Runtime composition using Module Federation
+* Shared storage for cross-MFE data
+* Event-based communication between MFEs
+
+This architecture allows frontend teams to **develop and release features independently while maintaining a unified user experience**.
