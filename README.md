@@ -1,3 +1,9 @@
+| FrontEnd Service | Deployment Status |
+|--------|------------------|
+| Insurance Platform - Container | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys) |
+| Policy - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys)|
+| Premium Pay - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys)
+
 # Insurance Platform
 
 A **Micro Frontend (MFE)** proof-of-concept client for an insurance company. The app is built with a host container and two React remotes: **My Policies** and **Pay Premium**. There is no backend; data is stored in the browser via a shared library and `localStorage`.
