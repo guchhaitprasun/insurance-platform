@@ -1,33 +1,95 @@
-| FrontEnd Service | Deployment Status | Deployment Link |
-|--------|------------------|-----------------------|
-| Insurance Platform - Container | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys) | https://insurance-platform.prasunguchhait.com/ | 
-| Policy - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys)| https://mfe-policy-detail.prasunguchhait.com/ | 
-| Premium Pay - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys) | https://mfe-pay-premium.prasunguchhait.com/
-
 # Insurance Platform
+![React](https://img.shields.io/badge/React-18-blue)
+![Webpack](https://img.shields.io/badge/Webpack-5-blue)
+![Module Federation](https://img.shields.io/badge/Module%20Federation-Micro%20Frontends-orange)
+![MUI](https://img.shields.io/badge/MUI-5-purple)
+![Netlify](https://img.shields.io/badge/Deployment-Netlify-green)
 
-A **Micro Frontend (MFE)** proof-of-concept client for an insurance company. The app is built with a host container and two React remotes: **My Policies** and **Pay Premium**. There is no backend; data is stored in the browser via a shared library and `localStorage`.
+A **Micro Frontend (MFE) proof-of-concept insurance client platform** built using **React, Webpack Module Federation, and Material UI**.
+
+The application demonstrates a **scalable frontend architecture** where independent frontend applications are deployed separately and composed dynamically at runtime.
+
+The system consists of:
+
+* **Container (Host Application)**
+* **Policy Details Micro Frontend**
+* **Pay Premium Micro Frontend**
+* **Shared Storage Library**
+
+The container dynamically loads the MFEs using **Webpack Module Federation**.
+
+---
+
+## Live Deployment
+
+| Service                                   | Status                                                                                                                                                                          | Live URL                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Insurance Platform – Container (Host)** | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys)      | https://insurance-platform.prasunguchhait.com |
+| **Policy Details – Micro Frontend**       | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys) | https://mfe-policy-detail.prasunguchhait.com  |
+| **Pay Premium – Micro Frontend**          | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys) | https://mfe-pay-premium.prasunguchhait.com    |
+
+---
 
 ## Features
+### My Policies
 
-- **My Policies** – View list of policies with cards (type, status, premium, due date, sum assured). “Recently paid” badge when a payment is completed from Pay Premium.
-- **Pay Premium** – Select a policy, choose amount and payment method, submit (demo only; no real charge). Payment validation can run in a **Web Worker** when same-origin.
-- **Shared state** – User, policies, and payments live in `shared-storage` (localStorage). Cross-MFE communication uses an **event bus** (e.g. payment complete → Policy Details “Recently paid”).
-- **UI** – Material UI (MUI) theme, AppBar, cards, forms. Responsive layout.
+* View list of insurance policies
+* Policy cards display:
 
-## Architecture (High-Level)
+  * Policy type
+  * Policy status
+  * Premium amount
+  * Due date
+  * Sum assured
+* Shows **Recently Paid badge** when payment is completed
+
+### Pay Premium
+
+Users can:
+
+* Select a policy
+* Enter premium amount
+* Choose payment method
+* Submit payment (simulation)
+
+⚠️ No real payment processing is implemented.
+
+---
+
+## Architecture Overview
 
 ```
-┌───────────────────────────────────────────────────────────────────┐
-│  Container (Host) – port 5000                                     │
-│  • Shell: MUI theme, AppBar, “Insurance Platform” logo, nav       │
-│  • Routes: / → Policy Details MFE, /pay-premium → Pay Premium MFE │
-│  • Module Federation: loads policyDetails + payPremium remotes    │
-│  • RemoteErrorBoundary wraps remotes                              │
-└───────────────────────────┬───────────────────────────────────────┘
+Container (Host)
+Port: 5000
+│
+├── Policy Details MFE (Port 3001)
+│     Displays policies and payment status
+│
+├── Pay Premium MFE (Port 3002)
+│     Handles premium payment workflow
+│
+└── shared-storage
+      Shared data layer + event bus
+```
+
+The **Container application** loads the MFEs dynamically using **Webpack Module Federation**.
+
+---
+## High-Level Architecture Diagram
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                    Container (Host) – port 5000                    │
+│  • Shell: MUI theme, AppBar, “Insurance Platform” logo, nav        │
+│  • Routes: / → Policy Details MFE, /pay-premium → Pay Premium MFE  │
+│  • Module Federation: loads policyDetails + payPremium remotes     │
+│  • RemoteErrorBoundary wraps remotes                               │
+|                                                                    |
+|  Loads Remote MFEs using Module Federation                         |
+└───────────────────────────┬────────────────────────────────────────┘
                             │
-        ┌───────────────────┼───────────────────┐
-        ▼                   ▼                   ▼
+        ┌───────────────────|────────────────────┐
+        ▼                   ▼                    ▼ 
 ┌───────────────┐   ┌───────────────┐   ┌──────────────────┐
 │ Policy Details│   │ Pay Premium   │   │ shared-storage   │
 │ MFE (3001)    │   │ MFE (3002)    │   │ (workspace lib)  │
@@ -39,10 +101,10 @@ A **Micro Frontend (MFE)** proof-of-concept client for an insurance company. The
 │               │   │ ┌───────────┐ │   │ • addPayment     │
 └───────┬───────┘   │ │  WORKER   │ │   │ • eventBus       │
         │           │ │ validation│ │   └────────┬─────────┘
-        │           │ └───────────┘ │           │
-        │           └───────┬───────┘           │
-        │    eventBus       │                   │
-        └───────────────────┴───────────────────┘
+        │           │ └───────────┘ │            │
+        │           └───────┬───────┘            │
+        │    Event Bus      │                    │
+        └───────────────────┴────────────────────┘
                 (payment-complete → Policy Details)
 ```
 
@@ -72,13 +134,14 @@ Payment validation runs off the main thread when the MFE is same-origin with the
 - **Sass** – Used in container and both MFEs; `sass-loader` configured with `silenceDeprecations: ['legacy-js-api']` for Dart Sass.
 - **Event bus** – `shared-storage` exposes `eventBus.subscribe` / `eventBus.publish`. Pay Premium publishes `payment-complete`; Policy Details subscribes and shows “Recently paid.”
 - **Bootstrap pattern** – Container and both MFEs use an entry that only `import('./bootstrap')` so shared modules are not loaded eagerly; real app mounts in `bootstrap.jsx`.
+- **Module Federation** - Container dynamically loads remote application
 
 ## Project Structure
 
 ```
 insurance-platform/
 ├── package.json              # Workspaces + dev/build scripts
-├── container/                 # Host (port 5000)
+├── container/                # Host (port 5000)
 │   ├── src/
 │   │   ├── index.jsx         # Entry → bootstrap
 │   │   ├── bootstrap.jsx     # ThemeProvider, App, Router
@@ -182,7 +245,10 @@ The app deploys as **three Netlify sites** (container + Policy Details + Pay Pre
 - **Policy Details:** Build `npm run build -w mfe-policy-details`, publish `mfe-policy-details/dist`. Set `MFE_POLICY_PUBLIC_PATH` (or Netlify’s `DEPLOY_PRIME_URL` is used). CORS `_headers` are copied into dist.
 - **Pay Premium:** Build `npm run build -w mfe-pay-premium`, publish `mfe-pay-premium/dist`. Set `MFE_PREMIUM_PUBLIC_PATH` (or `DEPLOY_PRIME_URL`). CORS `_headers` are copied into dist.
 
-**Deploy order:** Deploy the two remotes first, then the container so its env vars point at the live remote URLs.
+**Deploy order:** 
+>- 1️⃣ Deploy **Policy Details MFE**
+>- 2️⃣ Deploy **Pay Premium MFE**
+>- 3️⃣ Deploy **Container**
 
 ## License
 
