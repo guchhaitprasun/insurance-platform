@@ -1,6 +1,20 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const { ModuleFederationPlugin } = require('webpack').container;
+
+const policyUrl = process.env.MFE_POLICY_URL;
+const premiumUrl = process.env.MFE_PREMIUM_URL;
+const remotes =
+  policyUrl && premiumUrl
+    ? {
+        policyDetails: `policyDetails@${policyUrl.replace(/\/?$/, '/')}remoteEntry.js`,
+        payPremium: `payPremium@${premiumUrl.replace(/\/?$/, '/')}remoteEntry.js`,
+      }
+    : {
+        policyDetails: 'policyDetails@http://localhost:3001/remoteEntry.js',
+        payPremium: 'payPremium@http://localhost:3002/remoteEntry.js',
+      };
 
 module.exports = {
   entry: './src/index.jsx',
@@ -37,12 +51,12 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './public/index.html' }),
+    new CopyPlugin({
+      patterns: [{ from: 'public/_redirects', to: '.' }],
+    }),
     new ModuleFederationPlugin({
       name: 'container',
-      remotes: {
-        policyDetails: 'policyDetails@http://localhost:3001/remoteEntry.js',
-        payPremium: 'payPremium@http://localhost:3002/remoteEntry.js',
-      },
+      remotes,
       shared: {
         react: { singleton: true, requiredVersion: '^18.2.0' },
         'react-dom': { singleton: true, requiredVersion: '^18.2.0' },
