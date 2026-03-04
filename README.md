@@ -1,8 +1,8 @@
-| FrontEnd Service | Deployment Status |
-|--------|------------------|
-| Insurance Platform - Container | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys) |
-| Policy - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys)|
-| Premium Pay - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys)
+| FrontEnd Service | Deployment Status | Deployment Link |
+|--------|------------------|-----------------------|
+| Insurance Platform - Container | [![Netlify Status](https://api.netlify.com/api/v1/badges/f8c3dc5c-7eb0-4d75-9111-c1dee6f342d8/deploy-status)](https://app.netlify.com/projects/insurance-platform/deploys) | https://insurance-platform.prasunguchhait.com/ | 
+| Policy - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/14690904-43f5-4ae6-a227-1af140aed214/deploy-status)](https://app.netlify.com/projects/mfe1-insurance-platform/deploys)| https://mfe-policy-detail.prasunguchhait.com/ | 
+| Premium Pay - MFE | [![Netlify Status](https://api.netlify.com/api/v1/badges/cfd011c2-aeb6-4544-b35d-6d3e08335759/deploy-status)](https://app.netlify.com/projects/mfe2-insurance-platform/deploys) | https://mfe-pay-premium.prasunguchhait.com/
 
 # Insurance Platform
 
